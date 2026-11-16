@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KoaSocial - Le réseau social</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .hidden-section { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased">
+
+    <!-- APPLICATION CONTAINER -->
+    <div id="app">
+
+        <!-- ================= AUTH SCREEN ================= -->
+        <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-600 to-indigo-800">
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative z-10">
+                <div class="text-center mb-8">
+                    <h1 class="text-4xl font-extrabold text-blue-600 tracking-tight">KoaSocial</h1>
+                    <p class="text-gray-500 mt-2">Partagez votre journée avec vos amis</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex border-b mb-6">
+                    <button type="button" onclick="switchTab('login')" id="tab-login" class="flex-1 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 transition">Connexion</button>
+                    <button type="button" onclick="switchTab('register')" id="tab-register" class="flex-1 py-3 font-semibold text-gray-400 border-b-2 border-transparent transition">Inscription</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="login-email" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                        <input type="password" id="login-password" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition shadow-md">Se connecter</button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden-section">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
+                        <input type="text" id="reg-name" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="reg-email" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                        <input type="password" id="reg-password" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition shadow-md">S'inscrire</button>
+                </form>
+                
+                <div class="mt-6 text-center text-xs text-gray-400">
+                    Comptes de test pré-enregistrés : <span class="font-semibold">sarah@mail.com</span> / <span class="font-semibold">password</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MAIN APP SCREEN ================= -->
+        <div id="main-screen" class="hidden-section min-h-screen flex flex-col">
+            <!-- Navbar -->
+            <header class="bg-white shadow sticky top-0 z-50">
+                <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl font-black text-blue-600">KoaSocial</span>
+                    </div>
+                    <nav class="flex space-x-2 md:space-x-6">
+                        <button type="button" onclick="switchView('feed')" id="nav-feed" class="px-3 py-2 rounded-lg text-blue-600 font-bold bg-blue-50 transition flex items-center gap-2">
+                            <i class="fa-solid fa-house"></i> <span class="hidden md:inline">Fil d'actualité</span>
+                        </button>
+                        <button type="button" onclick="switchView('chat')" id="nav-chat" class="px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition flex items-center gap-2">
+                            <i class="fa-solid fa-comments"></i> <span class="hidden md:inline">Messagerie</span>
+                        </button>
+                        <button type="button" onclick="switchView('profile')" id="nav-profile" class="px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition flex items-center gap-2">
+                            <i class="fa-solid fa-user"></i> <span class="hidden md:inline">Profil</span>
+                        </button>
+                    </nav>
+                    <div class="flex items-center space-x-3">
+                        <span id="current-username" class="font-semibold text-sm text-gray-700 hidden sm:inline"></span>
+                        <button type="button" onclick="logout()" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition" title="Déconnexion">
+                            <i class="fa-solid fa-power-off text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Views -->
+            <main class="flex-1 max-w-4xl w-full mx-auto p-4">
+                
+                <!-- VIEW: FEED (Photo du jour) -->
+                <div id="view-feed" class="space-y-6">
+                    <!-- Create Post Box -->
+                    <div class="bg-white rounded-xl shadow p-4">
+                        <h2 class="text-lg font-bold mb-3 flex items-center gap-2 text-blue-600">
+                            <i class="fa-solid fa-camera-retro"></i> Publier votre photo du jour
+                        </h2>
+                        <form onsubmit="createPost(event)" class="space-y-3">
+                            <textarea id="post-caption" rows="2" placeholder="Qu'avez-vous fait aujourd'hui ?" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
+                            <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                                <div class="w-full sm:w-auto">
+                                    <label class="block text-xs font-medium text-gray-500 mb-1">Choisir une image ou lien URL</label>
+                                    <input type="file" id="post-image-file" accept="image/*" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                </div>
+                                <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition shadow">Publier</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Posts Feed List -->
+                    <div id="posts-container" class="space-y-6">
+                        <!-- Les publications seront injectées dynamiquement ici -->
+                    </div>
+                </div>
+
+                <!-- VIEW: CHAT -->
+                <div id="view-chat" class="hidden-section bg-white rounded-xl shadow overflow-hidden flex h-[75vh]">
+                    <!-- Friends Sidebar -->
+                    <div class="w-1/3 border-r flex flex-col">
+                        <div class="p-3 bg-gray-50 font-bold border-b text-gray-700">Amis</div>
+                        <div id="friends-list" class="overflow-y-auto flex-1 divide-y">
+                            <!-- Liste des amis -->
+                        </div>
+                    </div>
+                    <!-- Chat Box -->
+                    <div class="w-2/3 flex flex-col bg-gray-50">
+                        <div id="chat-header" class="p-3 bg-white border-b font-bold text-gray-700 flex items-center gap-3">
+                            <span class="text-gray-400">Sélectionnez un ami pour discuter</span>
+                        </div>
+                        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-3 flex flex-col">
+                            <div class="m-auto text-center text-gray-400 text-sm">Aucune discussion active</div>
+                        </div>
+                        <div id="chat-input-area" class="p-3 bg-white border-t hidden-section">
+                            <form onsubmit="sendChatMessage(event)" class="flex gap-2">
+                                <input type="text" id="chat-input" placeholder="Écrivez votre message..." class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold transition">Envoyer</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: PROFILE -->
+                <div id="view-profile" class="hidden-section space-y-6">
+                    <div class="bg-white rounded-xl shadow p-6 text-center">
+                        <div class="w-24 h-24 bg-blue-600 text-white font-bold text-3xl rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner" id="profile-avatar-initial"></div>
+                        <h2 id="profile-name" class="text-2xl font-bold"></h2>
+                        <p id="profile-email" class="text-gray-500 text-sm mb-4"></p>
+                        <div class="inline-block bg-blue-50 text-blue-700 px-4 py-1.5 rounded-full text-sm font-semibold">Membre de KoaSocial</div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-bold mb-4">Vos publications</h3>
+                        <div id="user-posts-container" class="space-y-4">
+                            <!-- Posts de l'utilisateur -->
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        if (!localStorage.getItem('users')) {
+            const defaultUsers = [
+                { id: '1', name: 'Sarah Bernard', email: 'sarah@mail.com', password: 'password' },
+                { id: '2', name: 'Andry Rakoto', email: 'andry@mail.com', password: 'password' },
+                { id: '3', name: 'Mahmoud Gizy', email: 'mahmoud@mail.com', password: 'password' }
+            ];
+            localStorage.setItem('users', JSON.stringify(defaultUsers));
+        }
+
+        if (!localStorage.getItem('posts')) {
+            const samplePosts = [
+                {
+                    id: 'p1',
+                    userId: '1',
+                    userName: 'Sarah Bernard',
+                    caption: 'Magnifique coucher de soleil aujourd'hui ! 🌅 Ma photo du jour.',
+                    image: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?auto=format&fit=crop&w=800&q=80',
+                    date: new Date(Date.now() - 3600000 * 2).toISOString(),
+                    likes: ['2', '3'],
+                    comments: [
+                        { userName: 'Andry Rakoto', text: 'Superbe vue ! Profite bien.' }
+                    ]
+                }
+            ];
+            localStorage.setItem('posts', JSON.stringify(samplePosts));
+        }
+
+        if (!localStorage.getItem('messages')) {
+            localStorage.setItem('messages', JSON.stringify([]));
+        }
+
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+        let activeChatUser = null;
+
+        window.onload = function() {
+            if (currentUser) {
+                showMainApp();
+            }
+        };
+
+        function switchTab(tab) {
+            if (tab === 'login') {
+                document.getElementById('form-login').classList.remove('hidden-section');
+                document.getElementById('form-register').classList.add('hidden-section');
+                document.getElementById('tab-login').className = "flex-1 py-3 font-semibold text-blue-600 border-b-2 border-blue-600 transition";
+                document.getElementById('tab-register').className = "flex-1 py-3 font-semibold text-gray-400 border-b-2 border-transparent transition";
+            } else {
+                document.getElementById('form-login').classList.add('hidden-section');
+                document.getElementById('form-register').classList.remove('hidden-section');
+                document.getElementById('tab-register').className = "flex-1 py-3 font-semibold text-green-600 border-b-2 border-green-600 transition";
+                document.getElementById('tab-login').className = "flex-1 py-3 font-semibold text-gray-400 border-b-2 border-transparent transition";
+            }
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            let users = JSON.parse(localStorage.getItem('users'));
+            if (users.some(u => u.email === email)) {
+                alert('Cet email est déjà utilisé !');
+                return;
+            }
+
+            const newUser = { id: Date.now().toString(), name, email, password };
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            alert('Inscription réussie ! Veuillez vous connecter.');
+            switchTab('login');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            let users = JSON.parse(localStorage.getItem('users'));
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showMainApp();
+            } else {
+                alert('Email ou mot de passe incorrect.');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('main-screen').classList.add('hidden-section');
+            document.getElementById('auth-screen').classList.remove('hidden-section');
+        }
+
+        function showMainApp() {
+            document.getElementById('auth-screen').classList.add('hidden-section');
+            document.getElementById('main-screen').classList.remove('hidden-section');
+            document.getElementById('current-username').innerText = currentUser.name;
+            loadFeed();
+            loadProfile();
+        }
+
+        function switchView(viewName) {
+            ['feed', 'chat', 'profile'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden-section');
+                document.getElementById(`nav-${v}`).className = "px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition flex items-center gap-2";
+            });
+            document.getElementById(`view-${viewName}`).classList.remove('hidden-section');
+            document.getElementById(`nav-${viewName}`).className = "px-3 py-2 rounded-lg text-blue-600 font-bold bg-blue-50 transition flex items-center gap-2";
+
+            if (viewName === 'feed') loadFeed();
+            if (viewName === 'chat') loadChatFriends();
+            if (viewName === 'profile') loadProfile();
+        }
+
+        function createPost(e) {
+            e.preventDefault();
+            const caption = document.getElementById('post-caption').value;
+            const fileInput = document.getElementById('post-image-file');
+
+            if (!caption && fileInput.files.length === 0) {
+                alert('Veuillez ajouter du texte ou une photo.');
+                return;
+            }
+
+            const processPost = (imageUrl) => {
+                let posts = JSON.parse(localStorage.getItem('posts')) || [];
+                const newPost = {
+                    id: Date.now().toString(),
+                    userId: currentUser.id,
+                    userName: currentUser.name,
+                    caption: caption,
+                    image: imageUrl || '',
+                    date: new Date().toISOString(),
+                    likes: [],
+                    comments: []
+                };
+                posts.unshift(newPost);
+                localStorage.setItem('posts', JSON.stringify(posts));
+                document.getElementById('post-caption').value = '';
+                fileInput.value = '';
+                loadFeed();
+            };
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(uploadEvent) {
+                    processPost(uploadEvent.target.result);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                processPost('');
+            }
+        }
+
+        function loadFeed() {
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 py-8">Aucune publication pour le moment. Soyez le premier !</div>';
+                return;
+            }
+
+            posts.forEach(post => {
+                const isLiked = post.likes.includes(currentUser.id);
+                const postDiv = document.createElement('div');
+                postDiv.className = "bg-white rounded-xl shadow p-4 space-y-3";
+                postDiv.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-500 text-white font-bold rounded-full flex items-center justify-center">
+                                ${post.userName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800">${post.userName}</h4>
+                                <span class="text-xs text-gray-400">${new Date(post.date).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-700">${escapeHtml(post.caption)}</p>
+                    ${post.image ? `<img src="${post.image}" class="rounded-lg w-full max-h-96 object-cover shadow-sm">` : ''}
+                    <div class="flex items-center justify-between text-sm text-gray-500 pt-2 border-t">
+                        <button type="button" onclick="toggleLike('${post.id}')" class="flex items-center gap-1.5 font-semibold ${isLiked ? 'text-blue-600' : 'hover:text-blue-600'} transition">
+                            <i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-thumbs-up"></i> J'aime (${post.likes.length})
+                        </button>
+                        <span>${post.comments.length} commentaire(s)</span>
+                    </div>
+                    <div class="space-y-2 pt-2 border-t">
+                        <div class="space-y-2 max-h-40 overflow-y-auto">
+                            ${post.comments.map(c => `
+                                <div class="bg-gray-50 p-2 rounded-lg text-sm">
+                                    <span class="font-bold text-gray-800">${c.userName} :</span> ${escapeHtml(c.text)}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <form onsubmit="addComment(event, '${post.id}')" class="flex gap-2 mt-2">
+                            <input type="text" placeholder="Écrire un commentaire..." id="comment-input-${post.id}" class="flex-1 px-3 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <button type="submit" class="bg-gray-200 hover:bg-gray-300 px-3 py-1.5 text-sm font-semibold rounded-lg transition">Envoyer</button>
+                        </form>
+                    </div>
+                `;
+                container.appendChild(postDiv);
+            });
+        }
+
+        function toggleLike(postId) {
+            let posts = JSON.parse(localStorage.getItem('posts'));
+            posts = posts.map(p => {
+                if (p.id === postId) {
+                    if (p.likes.includes(currentUser.id)) {
+                        p.likes = p.likes.filter(id => id !== currentUser.id);
+                    } else {
+                        p.likes.push(currentUser.id);
+                    }
+                }
+                return p;
+            });
+            localStorage.setItem('posts', JSON.stringify(posts));
+            loadFeed();
+        }
+
+        function addComment(e, postId) {
+            e.preventDefault();
+            const input = document.getElementById(`comment-input-${postId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            let posts = JSON.parse(localStorage.getItem('posts'));
+            posts = posts.map(p => {
+                if (p.id === postId) {
+                    p.comments.push({ userName: currentUser.name, text: text });
+                }
+                return p;
+            });
+            localStorage.setItem('posts', JSON.stringify(posts));
+            loadFeed();
+        }
+
+        function loadChatFriends() {
+            const users = JSON.parse(localStorage.getItem('users')).filter(u => u.id !== currentUser.id);
+            const list = document.getElementById('friends-list');
+            list.innerHTML = '';
+
+            if (users.length === 0) {
+                list.innerHTML = '<div class="p-4 text-gray-400 text-sm text-center">Aucun autre utilisateur</div>';
+                return;
+            }
+
+            users.forEach(user => {
+                const div = document.createElement('div');
+                div.className = `p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-100 transition ${activeChatUser && activeChatUser.id === user.id ? 'bg-blue-50 border-l-4 border-blue-600' : ''}`;
+                div.onclick = () => selectChatUser(user);
+                div.innerHTML = `
+                    <div class="w-10 h-10 bg-indigo-500 text-white font-bold rounded-full flex items-center justify-center">
+                        ${user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="font-bold text-sm text-gray-800">${user.name}</div>
+                        <div class="text-xs text-gray-400">En ligne</div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function selectChatUser(user) {
+            activeChatUser = user;
+            loadChatFriends();
+            document.getElementById('chat-header').innerHTML = `
+                <div class="w-8 h-8 bg-indigo-500 text-white font-bold rounded-full flex items-center justify-center text-sm">
+                    ${user.name.charAt(0).toUpperCase()}
+                </div>
+                <span>${user.name}</span>
+            `;
+            document.getElementById('chat-input-area').classList.remove('hidden-section');
+            loadChatMessages();
+        }
+
+        function loadChatMessages() {
+            if (!activeChatUser) return;
+            const messages = JSON.parse(localStorage.getItem('messages')) || [];
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+
+            const thread = messages.filter(m => 
+                (m.senderId === currentUser.id && m.receiverId === activeChatUser.id) ||
+                (m.senderId === activeChatUser.id && m.receiverId === currentUser.id)
+            );
+
+            if (thread.length === 0) {
+                container.innerHTML = '<div class="m-auto text-center text-gray-400 text-sm">Envoyez votre premier message !</div>';
+                return;
+            }
+
+            thread.forEach(msg => {
+                const isMe = msg.senderId === currentUser.id;
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `max-w-[70%] p-3 rounded-xl text-sm ${isMe ? 'bg-blue-600 text-white self-end rounded-br-none' : 'bg-white border text-gray-800 self-start rounded-bl-none shadow-sm'}`;
+                msgDiv.innerHTML = `<div>${escapeHtml(msg.text)}</div><div class="text-[10px] mt-1 opacity-75 text-right">${new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
+                container.appendChild(msgDiv);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendChatMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text || !activeChatUser) return;
+
+            let messages = JSON.parse(localStorage.getItem('messages')) || [];
+            const newMsg = {
+                id: Date.now().toString(),
+                senderId: currentUser.id,
+                receiverId: activeChatUser.id,
+                text: text,
+                date: new Date().toISOString()
+            };
+            messages.push(newMsg);
+            localStorage.setItem('messages', JSON.stringify(messages));
+            input.value = '';
+            loadChatMessages();
+        }
+
+        function loadProfile() {
+            if (!currentUser) return;
+            document.getElementById('profile-name').innerText = currentUser.name;
+            document.getElementById('profile-email').innerText = currentUser.email;
+            document.getElementById('profile-avatar-initial').innerText = currentUser.name.charAt(0).toUpperCase();
+
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+            const userPosts = posts.filter(p => p.userId === currentUser.id);
+            const container = document.getElementById('user-posts-container');
+            container.innerHTML = '';
+
+            if (userPosts.length === 0) {
+                container.innerHTML = '<div class="text-gray-400 text-sm">Vous n'avez publié aucune photo pour le moment.</div>';
+                return;
+            }
+
+            userPosts.forEach(post => {
+                const div = document.createElement('div');
+                div.className = "border p-3 rounded-lg bg-gray-50 space-y-2";
+                div.innerHTML = `
+                    <p class="text-sm text-gray-700">${escapeHtml(post.caption)}</p>
+                    ${post.image ? `<img src="${post.image}" class="rounded-md max-h-48 w-full object-cover">` : ''}
+                    <div class="text-xs text-gray-400">${new Date(post.date).toLocaleString()}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
